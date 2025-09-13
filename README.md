@@ -38,9 +38,9 @@ No installation required — MLBOA8 is **pure Python**.
 Simply clone the repo or copy the `MLBOA8.py` file into your project. Works on **MicroPython** or standard Python 3.x.
 
 ```bash
-git clone <your-repo-url>
-cd MLBOA8
-python3 MLBOA8.py
+git clone https://github.com/MOHAPY24/MBOA8.git
+cd MBOA8
+python3 cpu.py
 ```
 
 ---
@@ -48,7 +48,7 @@ python3 MLBOA8.py
 ## Usage
 
 ```python
-from MLBOA8 import MBOA8
+from MBOA8 import MBOA8
 
 # Sample program
 program = [
