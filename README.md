@@ -1,82 +1,127 @@
-# MBOA8 / MLBOA8 – Mini Boa 8-Bit CPU Emulator
+# MLBOA8 – Mini 8-bit Python CPU Emulator
 
-**Tiny. Simple. Educational. Python-powered. Micro\:bit Ready.**
-
-MBOA8 (or MLBOA8) is a **super lightweight 8-bit CPU simulator** written in Python. Designed to **learn CPU basics and opcode execution** in a minimal, approachable way. Perfect for Python experiments or Micro\:bit testing.
+**MLBOA8 (Mini Boa 8-bit)** is a **tiny, educational 8-bit CPU emulator** written in pure Python. Designed for learning, experimentation, and microcontrollers like the **micro\:bit**, MLBOA8 simulates a simple CPU with basic registers, memory, and opcodes — all in under 300 lines of Python code. Perfect for aspiring CPU architects, hobbyists, and coders who want to **build a CPU in Python from scratch**.
 
 ---
 
-## ⚡ Features
+## Features
 
-* **8-bit CPU** with 8 registers (`A`–`H`)
-* **256 bytes of memory**
-* **Minimal instruction set**:
+* **8-bit architecture** with 8 general-purpose registers (A–H).
 
-  * `0x00` – NOP / Padding
-  * `0x01` – `LDA` – Load a value from the next memory cell into the accumulator (`A`)
-  * `0x02` – `STA` – Store accumulator (`A`) into the next memory cell
-  * `0x03` – `ADR` – Add the value from the next memory cell to accumulator (`A`)
-  * `0xFF` – `HLT` – Halt execution
-* **Custom exception handling** for invalid opcodes
-* Tracks **execution time**
+* **256-byte memory** for programs and data.
+
+* **Basic instruction set**:
+
+  * `LDA addr` – Load memory into accumulator A
+  * `STA addr` – Store accumulator into memory
+  * `ADD addr` – Add memory value to accumulator
+  * `SUB addr` – Subtract memory value from accumulator
+  * `INC reg` / `DEC reg` – Increment/Decrement a register
+  * `JMP addr` – Jump to address
+  * `JZ addr` / `JNZ addr` – Conditional jumps
+  * `SAVE_INTO_B` / `LOAD_FROM_B` – Temp storage using register B
+  * `IN addr` / `OUT addr` – Input and output operations
+  * `HLT` – Stop program execution
+
+* **Program counter safety** – prevents memory overflow.
+
+* **8-bit arithmetic** – wraps around at 256.
+
+* **Time measurement** – tracks execution time in milliseconds.
 
 ---
 
-## 🛠️ Requirements
+## Installation
 
-* Python 3.x (or MicroPython)
-* `time` module for execution timing (optional; remove on Micro\:bit)
+No installation required — MLBOA8 is **pure Python**.
 
----
+Simply clone the repo or copy the `MLBOA8.py` file into your project. Works on **MicroPython** or standard Python 3.x.
 
-## 💻 How to Use
-
-1. **Write your program as a list of opcodes** (no addresses required, this will be changed in the upgraded GP8BE soon):
-
-```python
-program = [
-    0x00,  # NOP / padding
-    0x01,  # LDA (loads next memory cell into accumulator)
-    0x03,  # ADR (adds next memory cell to accumulator)
-    0x02,  # STA (stores accumulator to next memory cell)
-    0x03,  # ADR again
-    0x00,  # NOP
-    0xFF   # HLT
-]
+```bash
+git clone <your-repo-url>
+cd MLBOA8
+python3 MLBOA8.py
 ```
 
-2. **Create a CPU instance, load, and execute**:
+---
+
+## Usage
 
 ```python
+from MLBOA8 import MBOA8
+
+# Sample program
+program = [
+    0x01, 0x00,  # LDA 0x00
+    0x02, 0x01,  # STA 0x01
+    0x03, 0x02,  # ADD 0x02
+    0xFF         # HLT
+]
+
 cpu = MBOA8(program)
 cpu.load_program()
 cpu.execu()
 ```
 
-3. **Check results**:
+* `program` is a list of **opcodes and operands**.
+* `load_program()` maps it into memory.
+* `execu()` runs the CPU emulator.
+
+---
+
+## Memory Layout
+
+* 0x00–0xFF: 256-byte memory space.
+* Accumulator `A` = register 0, temp register `B` = register 1.
+* All arithmetic is **8-bit**, wrapping from 255 → 0.
+
+---
+
+## Development
+
+* Add new **opcodes** by editing the `execu()` method.
+* Extend CPU with more registers, I/O, or memory-mapped devices.
+* Designed to be **micro\:bit compatible**, just remove `time` imports if using MicroPython.
+
+---
+
+## Contributing
+
+1. Fork the repo
+2. Create a branch `feature/new-opcode`
+3. Implement your opcode
+4. Submit a pull request
+
+---
+
+## License
+
+MIT License – free to use, modify, and teach with.
+
+---
+
+## Example Programs
+
+### Hello World (Pseudo-loop using OUT)
 
 ```python
-print("Registers:", cpu.registers)
-print("Memory (first 20 cells):", cpu.memory[:20])
+# Print each character from memory until counter = 0
+program = [
+    0x01, 0x20,  # LDA counter
+    0x0E, 0x01,  # SAVE_INTO_B
+    # Loop start...
+    0x01, 0x10,  # LDA memory[ptr]
+    0xDF, 0x10,  # OUT
+    0xBF, 0x01,  # DEC counter
+    0x0F, 0x03,  # JNZ to Loop start
+    0xFF         # HLT
+]
 ```
 
 ---
 
-## 🚀 Notes
+### Notes
 
-* The **accumulator (`A`)** is always `registers[0]`.
-* The CPU currently **supports only 256 bytes of memory**.
-* Your program can run **without pre-filled memory**; the CPU will read and write values as needed.
-* Perfect for **learning assembly-style thinking, memory manipulation, and CPU flow**.
+* This CPU is **purely educational** — not for production or heavy computation.
+* Perfect for **learning how CPUs work**, **assembly logic**, and **emulating minimal architectures**.
 
----
-
-## 💡 Inspiration
-
-Designed to teach CPU basics, experiment with opcode logic, and test limits on **Micro\:bit or Python**. Minimalistic, lightweight, and fun for hobbyists, students, and curious coders.
-
----
-
-## 📝 License
-
-MIT / Public Domain – hack, tweak, and experiment freely.
