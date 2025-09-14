@@ -1,127 +1,139 @@
-# MLBOA8 – Mini 8-bit Python CPU Emulator
 
-**MLBOA8 (Mini Boa 8-bit)** is a **tiny, educational 8-bit CPU emulator** written in pure Python. Designed for learning, experimentation, and microcontrollers like the **micro\:bit**, MLBOA8 simulates a simple CPU with basic registers, memory, and opcodes — all in under 300 lines of Python code. Perfect for aspiring CPU architects, hobbyists, and coders who want to **build a CPU in Python from scratch**.
+# OpenBoa
 
----
+**OpenBoa** is a Python-based emulator for the **MBOA8** CPU (Mini Boa 8-bit).
+It includes a CPU emulator, an assembler, and an interactive kernel so you can test assembly instructions in real time.
 
-## Features
-
-* **8-bit architecture** with 8 general-purpose registers (A–H).
-
-* **256-byte memory** for programs and data.
-
-* **Basic instruction set**:
-
-  * `LDA addr` – Load memory into accumulator A
-  * `STA addr` – Store accumulator into memory
-  * `ADD addr` – Add memory value to accumulator
-  * `SUB addr` – Subtract memory value from accumulator
-  * `INC reg` / `DEC reg` – Increment/Decrement a register
-  * `JMP addr` – Jump to address
-  * `JZ addr` / `JNZ addr` – Conditional jumps
-  * `SAVE_INTO_B` / `LOAD_FROM_B` – Temp storage using register B
-  * `IN addr` / `OUT addr` – Input and output operations
-  * `HLT` – Stop program execution
-
-* **Program counter safety** – prevents memory overflow.
-
-* **8-bit arithmetic** – wraps around at 256.
-
-* **Time measurement** – tracks execution time in milliseconds.
+This project is designed as an educational playground to show how instructions, memory, and registers all work together at the most basic level of computer architecture.
 
 ---
 
-## Installation
+## CPU Overview
 
-No installation required — MLBOA8 is **pure Python**.
+* **Memory:** 256 bytes (0x00–0xFF)
 
-Simply clone the repo or copy the `MLBOA8.py` file into your project. Works on **MicroPython** or standard Python 3.x.
+* **Registers:** 8 total →
 
-```bash
-git clone https://github.com/MOHAPY24/MBOA8.git
-cd MBOA8
-python3 cpu.py
-```
+  * `0x00` → A (accumulator)
+  * `0x01` → B (temp memory)
+  * `0x02` → C
+  * `0x03` → D
+  * `0x04` → E
+  * `0x05` → F
+  * `0x06` → G
+  * `0x07` → H
+
+* **PC (Program Counter):** tracks the next instruction address
+
+* **Execution Model:** Fetch → Decode → Execute loop
+
+* **Instruction Size:** 2 bytes → (opcode + operand), except `PDI` and `HLT` which are single byte
+
+---
+
+## Instruction Set
+
+| Mnemonic           | Opcode | Operand Type              | Description                                |
+| ------------------ | ------ | ------------------------- | ------------------------------------------ |
+| `PDI`              | `0x00` | none                      | Padding/NOP (does nothing, one cycle)      |
+| `LDA addr`         | `0x01` | memory addr (0x00–0xFF)   | Load memory\[addr] into A                  |
+| `STA addr`         | `0x02` | memory addr               | Store A into memory\[addr]                 |
+| `ADD addr`         | `0x03` | memory addr               | Add memory\[addr] to A                     |
+| `SUB addr`         | `0x0B` | memory addr               | Subtract memory\[addr] from A              |
+| `JMP addr`         | `0x0A` | memory addr               | Jump unconditionally to addr               |
+| `JZ addr`          | `0x0C` | memory addr               | Jump to addr if A == 0                     |
+| `JNZ addr`         | `0x0F` | memory addr               | Jump to addr if A != 0                     |
+| `SAVE_INTO_B addr` | `0x0D` | memory addr               | Copy memory\[addr] into register B         |
+| `LOAD_FROM_B addr` | `0x0E` | memory addr               | Add B into memory\[addr], then clear B     |
+| `ADC reg_addr`     | `0xAF` | register addr (0x00–0x07) | Increment register\[reg\_addr] by 1        |
+| `DEC reg_addr`     | `0xBF` | register addr             | Decrement register\[reg\_addr] by 1        |
+| `INP addr`         | `0xCF` | memory addr               | Take integer input, place in memory\[addr] |
+| `OUT reg_addr`     | `0xDF` | register addr             | Print contents of register\[reg\_addr]     |
+| `OUT_MEM addr`     | `0xEF` | memory addr               | Print contents of memory\[addr]            |
+| `HLT`              | `0xFF` | none                      | Halt execution                             |
+
+**Key Rules:**
+
+* All instructions require operands except `PDI` and `HLT`.
+* Register operands must be between `0x00` and `0x07`.
+* Memory operands must be between `0x00` and `0xFF`.
 
 ---
 
 ## Usage
 
-```python
-from MBOA8 import MBOA8
+### Run the Kernel
 
-# Sample program
-program = [
-    0x01, 0x00,  # LDA 0x00
-    0x02, 0x01,  # STA 0x01
-    0x03, 0x02,  # ADD 0x02
-    0xFF         # HLT
-]
-
-cpu = MBOA8(program)
-cpu.load_program()
-cpu.execu()
+```bash
+python OpenBoa.py
 ```
 
-* `program` is a list of **opcodes and operands**.
-* `load_program()` maps it into memory.
-* `execu()` runs the CPU emulator.
+Banner shows:
 
----
+```
+OpenBoa 1.0.0, Copyright Mohammed Moustafa Abdelaal, GPL-3.0 License.
+Independent Kernel CLI for MBOA8 Emulation CPU.
+```
 
-## Memory Layout
-
-* 0x00–0xFF: 256-byte memory space.
-* Accumulator `A` = register 0, temp register `B` = register 1.
-* All arithmetic is **8-bit**, wrapping from 255 → 0.
-
----
-
-## Development
-
-* Add new **opcodes** by editing the `execu()` method.
-* Extend CPU with more registers, I/O, or memory-mapped devices.
-* Designed to be **micro\:bit compatible**, just remove `time` imports if using MicroPython.
-
----
-
-## Contributing
-
-1. Fork the repo
-2. Create a branch `feature/new-opcode`
-3. Implement your opcode
-4. Submit a pull request
-
----
-
-## License
-
-MIT License – free to use, modify, and teach with.
+Now type instructions directly.
 
 ---
 
 ## Example Programs
 
-### Hello World (Pseudo-loop using OUT)
+### 1. Print the Accumulator
 
-```python
-# Print each character from memory until counter = 0
-program = [
-    0x01, 0x20,  # LDA counter
-    0x0E, 0x01,  # SAVE_INTO_B
-    # Loop start...
-    0x01, 0x10,  # LDA memory[ptr]
-    0xDF, 0x10,  # OUT
-    0xBF, 0x01,  # DEC counter
-    0x0F, 0x03,  # JNZ to Loop start
-    0xFF         # HLT
-]
 ```
+usr@openboa $ LDA 0x05
+usr@openboa $ OUT 0x00
+```
+
+* Loads memory\[0x05] into A.
+* Prints A (register 0x00).
 
 ---
 
-### Notes
+### 2. Increment Register H
 
-* This CPU is **purely educational** — not for production or heavy computation.
-* Perfect for **learning how CPUs work**, **assembly logic**, and **emulating minimal architectures**.
+```
+usr@openboa $ ADC 0x07
+usr@openboa $ OUT 0x07
+```
 
+* Increments H by 1.
+* Prints H.
+
+---
+
+### 3. Input and Store
+
+```
+usr@openboa $ INP 0x10
+usr@openboa $ LDA 0x10
+usr@openboa $ OUT 0x00
+```
+
+* Reads integer input, stores in memory\[0x10].
+* Loads it into A.
+* Prints A.
+
+---
+
+### 4. Branching Example
+
+```
+usr@openboa $ LDA 0x20
+usr@openboa $ SUB 0x21
+usr@openboa $ JZ 0x30
+usr@openboa $ OUT 0x00
+```
+
+* Compares memory\[0x20] with memory\[0x21].
+* If equal → jumps to address 0x30.
+* Else → prints accumulator A.
+
+---
+
+## License
+
+GPL-3.0 License
