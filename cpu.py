@@ -13,7 +13,7 @@ class MBOA8: # Mini Boa (Python Based) 8 bit
     def __init__(self, program:list):
         self.program = program
         self.memory = [0] * 256
-        self.registers = [0] * 8 # A (accumelator), B, C, D, E, F, G, H
+        self.registers = [0] * 8 # A (accumulator), B (temp memory), C, D, E, F, G, H
         self.pc = 0
         self.opcode = 0x00
         self.clock_strt = time.time()
@@ -23,11 +23,32 @@ class MBOA8: # Mini Boa (Python Based) 8 bit
         for i, byte in enumerate(self.program):
             self.memory[start_addr + i] = byte
         return start_addr
+
+    def add_program(self, programs:list=None):
+        self.program = programs
+
+
+    def step(self, speed:int=0):
+        time.sleep(speed)
+        save_Code = self.program
+        self.program = self.program[self.pc]
+        self.program[self.pc + 1] = 0xFF
+        self.load_program(self.pc)
+        self.execu()
+        self.program = save_Code
+
+
     
     def execu(self): # Execute the opcodes
         halted = False # 0xFF
-        a = self.registers[0] # A (register 0) is now an accumelator
+        a = self.registers[0] # A (register 0) is now an accumulator
         b = self.registers[1] # B (register 1) is now temp memory
+        c = self.registers[2]
+        d = self.registers[3]
+        e = self.registers[4]
+        f = self.registers[5]
+        g = self.registers[6]
+        h = self.registers[7]
         
         while not halted:
             self.opcode = self.memory[self.pc] # Grab opcode
@@ -35,11 +56,11 @@ class MBOA8: # Mini Boa (Python Based) 8 bit
             
             
             if self.pc > 255:
-                raise IndexError("Program counter over 256 hexidecimal limit.")
-            
-            print(self.opcode)
+                raise IndexError("Program counter over 256 hexadecimal limit.")
+
                    
             if self.opcode == 0x00: # Padding
+                time.sleep(0.05)
                 continue
             elif self.opcode == 0x01: # LDA
                 addr = self.memory[self.pc] & 0xFF
@@ -86,15 +107,39 @@ class MBOA8: # Mini Boa (Python Based) 8 bit
                 reg_addr = self.memory[self.pc] & 0x07
                 self.pc += 1
                 self.registers[reg_addr] = (self.registers[reg_addr] - 1) & 0xFF
-            elif self.opcode == 0xCF: # IN
+            elif self.opcode == 0xCF: # INP
                 addr = self.memory[self.pc] & 0xFF
                 self.pc += 1
                 try:
-                    self.memory[addr] = int(input("")) & 0xFF 
+                    a += int(input("")) & 0xFF
                 except ValueError:
                     raise ValueError("Cannot take in non int value.")
             elif self.opcode == 0xDF: # OUT
+                reg_addr = self.memory[self.pc] & 0x07
+
+                self.pc += 1
+                if reg_addr == 0x00:
+                    print(a)
+                elif reg_addr == 0x01:
+                    print(b)
+                elif reg_addr == 0x02:
+                    print(c)
+                elif reg_addr == 0x03:
+                    print(d)
+                elif reg_addr == 0x04:
+                    print(e)
+                elif reg_addr == 0x05:
+                    print(f)
+                elif reg_addr == 0x06:
+                    print(g)
+                elif reg_addr == 0x07:
+                    print(h)
+                else:
+                    raise InvalidOpcode(self.opcode, reg_addr)
+
+            elif self.opcode == 0xEF:  # OUT_MEM
                 addr = self.memory[self.pc] & 0xFF
+
                 self.pc += 1
                 print(self.memory[addr])
                         
@@ -107,13 +152,15 @@ class MBOA8: # Mini Boa (Python Based) 8 bit
             
             self.registers[0] = a & 0xFF
             self.registers[1] = b & 0xFF
+            self.registers[2] = c & 0xFF
+            self.registers[3] = d & 0xFF
+            self.registers[4] = e & 0xFF
+            self.registers[5] = f & 0xFF
+            self.registers[6] = g & 0xFF
+            self.registers[7] = h & 0xFF
+
 
         self.clock_end = time.time()
         self.elapsed = (self.clock_end - self.clock_strt) * 10000
-        print(f"Time Elapsed: {self.elapsed:.2f} ms")
+        #print(f"Time Elapsed: {self.elapsed:.2f} ms")
             
-if __name__ == "__main__":
-    program = [0x01, 0x00, 0x02, 0x00, 0x03, 0x00, 0xFF] # Define opcodes
-    cpinst = MBOA8(program) # Define CPU instance
-    cpinst.load_program()
-    cpinst.execu() # Execute
