@@ -136,4 +136,4 @@ usr@openboa $ OUT 0x00
 
 ## License
 
-GPL-3.0 License
+MIT License
