@@ -6,7 +6,7 @@ from time import sleep
 running = True
 
 def banner():
-    print("OpenBoa 1.0.0, Copyright Mohammed Moustafa Abdelaal, GPL-3.0 License.")
+    print("OpenBoa 1.0.0, Copyright Mohammed Moustafa Abdelaal, MIT License.")
     print("Independent Kernel CLI for MBOA8 Emulation CPU.")
 
 
