@@ -1,6 +1,5 @@
 from cpu import MBOA8
-from errs import Assembler
-from time import sleep
+from asme import Assembler
 
 
 running = True
