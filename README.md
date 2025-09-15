@@ -1,139 +1,117 @@
 
-# OpenBoa
+# OpenBoa – Mini CPU Emulator (MBOA8)
 
-**OpenBoa** is a Python-based emulator for the **MBOA8** CPU (Mini Boa 8-bit).
-It includes a CPU emulator, an assembler, and an interactive kernel so you can test assembly instructions in real time.
+**Version: 1.0.1**
 
-This project is designed as an educational playground to show how instructions, memory, and registers all work together at the most basic level of computer architecture.
-
----
-
-## CPU Overview
-
-* **Memory:** 256 bytes (0x00–0xFF)
-
-* **Registers:** 8 total →
-
-  * `0x00` → A (accumulator)
-  * `0x01` → B (temp memory)
-  * `0x02` → C
-  * `0x03` → D
-  * `0x04` → E
-  * `0x05` → F
-  * `0x06` → G
-  * `0x07` → H
-
-* **PC (Program Counter):** tracks the next instruction address
-
-* **Execution Model:** Fetch → Decode → Execute loop
-
-* **Instruction Size:** 2 bytes → (opcode + operand), except `PDI` and `HLT` which are single byte
+> CPU learning project using the Von Neumann architecture.
+> This release fixes register update errors, cleans code, and improves the opcode parser.
 
 ---
 
-## Instruction Set
+## 🔑 Project Intent
 
-| Mnemonic           | Opcode | Operand Type              | Description                                |
-| ------------------ | ------ | ------------------------- | ------------------------------------------ |
-| `PDI`              | `0x00` | none                      | Padding/NOP (does nothing, one cycle)      |
-| `LDA addr`         | `0x01` | memory addr (0x00–0xFF)   | Load memory\[addr] into A                  |
-| `STA addr`         | `0x02` | memory addr               | Store A into memory\[addr]                 |
-| `ADD addr`         | `0x03` | memory addr               | Add memory\[addr] to A                     |
-| `SUB addr`         | `0x0B` | memory addr               | Subtract memory\[addr] from A              |
-| `JMP addr`         | `0x0A` | memory addr               | Jump unconditionally to addr               |
-| `JZ addr`          | `0x0C` | memory addr               | Jump to addr if A == 0                     |
-| `JNZ addr`         | `0x0F` | memory addr               | Jump to addr if A != 0                     |
-| `SAVE_INTO_B addr` | `0x0D` | memory addr               | Copy memory\[addr] into register B         |
-| `LOAD_FROM_B addr` | `0x0E` | memory addr               | Add B into memory\[addr], then clear B     |
-| `ADC reg_addr`     | `0xAF` | register addr (0x00–0x07) | Increment register\[reg\_addr] by 1        |
-| `DEC reg_addr`     | `0xBF` | register addr             | Decrement register\[reg\_addr] by 1        |
-| `INP addr`         | `0xCF` | memory addr               | Take integer input, place in memory\[addr] |
-| `OUT reg_addr`     | `0xDF` | register addr             | Print contents of register\[reg\_addr]     |
-| `OUT_MEM addr`     | `0xEF` | memory addr               | Print contents of memory\[addr]            |
-| `HLT`              | `0xFF` | none                      | Halt execution                             |
+OpenBoa is a **mini 8-bit CPU emulator** designed as a **teaching and learning tool**.
+It simulates a processor where **code and data share the same memory space**, just like in the Von Neumann model.
 
-**Key Rules:**
+The goal is to provide a minimal but functional system that demonstrates:
 
-* All instructions require operands except `PDI` and `HLT`.
-* Register operands must be between `0x00` and `0x07`.
-* Memory operands must be between `0x00` and `0xFF`.
+* How instructions are fetched, decoded, and executed.
+* How memory and registers interact.
+* How branching, arithmetic, and I/O work at the CPU level.
 
 ---
 
-## Usage
+## 🧠 Core Components
 
-### Run the Kernel
+### 1. **MBOA8 CPU (cpu.py)**
+
+* **Registers (A–H, 8-bit each):**
+
+  * `A`: Accumulator
+  * `B`: Temporary storage
+  * `C`: Program counter
+  * `D`: Current command
+  * `E`: Output
+  * `F`: Memory reference
+  * `G`, `H`: General-purpose
+
+* **Memory:** 256 bytes (programs + data).
+
+* **Execution cycle:** Fetch → Decode → Execute → Repeat.
+
+* **Safety:** invalid opcodes and memory overflows raise clear errors.
+
+**Supported Instructions:**
+
+* Data: `LDA`, `STA`, `SAVE_INTO_B`, `LOAD_FROM_B`
+* Arithmetic: `ADD`, `SUB`, `INC`, `DEC`
+* Branching: `JMP`, `JZ`, `JNZ`
+* I/O: `INP`, `OUT`, `OUT_MEM`
+* Control: `PDI`, `HLT`
+
+
+Now uses `match, case` instead of long `if, else` chain.
+
+---
+
+### 2. **Assembler (asme.py)**
+
+* Parses human-readable assembly into machine code.
+* Accepts hex addresses (e.g., `ADD 0x10`).
+* Converts directly into memory images ready to run.
+
+---
+
+### 3. **OpenBoa CLI (OpenBoa.py)**
+
+* REPL-like interactive shell.
+* Accepts assembly directly, assembles, loads, and executes it in one step.
+* Prints register/memory outputs instantly.
+
+Example:
 
 ```bash
-python OpenBoa.py
-```
-
-Banner shows:
-
-```
-OpenBoa 1.0.0, Copyright Mohammed Moustafa Abdelaal, GPL-3.0 License.
-Independent Kernel CLI for MBOA8 Emulation CPU.
-```
-
-Now type instructions directly.
-
----
-
-## Example Programs
-
-### 1. Print the Accumulator
-
-```
-usr@openboa $ LDA 0x05
+usr@openboa $ LDA 0x01
+usr@openboa $ ADD 0x02
 usr@openboa $ OUT 0x00
+usr@openboa $ HLT
 ```
-
-* Loads memory\[0x05] into A.
-* Prints A (register 0x00).
 
 ---
 
-### 2. Increment Register H
+## ⚙️ Features
 
-```
-usr@openboa $ ADC 0x07
-usr@openboa $ OUT 0x07
-```
-
-* Increments H by 1.
-* Prints H.
+* **Von Neumann architecture** simulation.
+* **Minimal instruction set** for clarity and learning.
+* **Assembler pipeline** included—no manual opcodes required.
+* **Safe execution** with error handling and bounds checks.
+* **Extensible**: easy to add instructions or expand memory.
 
 ---
 
-### 3. Input and Store
+## 🧩 Example Program
 
+```asm
+LDA 0x01    ; Load from memory address 0x01
+ADD 0x02    ; Add value at address 0x02
+OUT 0x00    ; Output accumulator value
+HLT         ; Halt execution
 ```
-usr@openboa $ INP 0x10
-usr@openboa $ LDA 0x10
-usr@openboa $ OUT 0x00
-```
-
-* Reads integer input, stores in memory\[0x10].
-* Loads it into A.
-* Prints A.
 
 ---
 
-### 4. Branching Example
+## 📜 Changelog
 
-```
-usr@openboa $ LDA 0x20
-usr@openboa $ SUB 0x21
-usr@openboa $ JZ 0x30
-usr@openboa $ OUT 0x00
-```
+### v1.0.1
 
-* Compares memory\[0x20] with memory\[0x21].
-* If equal → jumps to address 0x30.
-* Else → prints accumulator A.
+* **Fixed:** `INC (ADC)` and `DEC` registers now properly update values.
+* **Removed:** unnecessary/duplicate code for cleaner internals.
+* **Improved:** opcode parser migrated from a long `if/else` chain → Python `match/case`.
 
----
+### v1.0.0
 
-## License
+* Initial release of OpenBoa.
+* Included CPU, assembler, and CLI shell.
 
-MIT License
+# License
+MIT License, do whatever you want.
